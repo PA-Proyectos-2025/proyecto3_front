@@ -1,0 +1,59 @@
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: white;
+  overflow-x: hidden;
+}
+
+.dashboard-content {
+  flex: 1;
+  background-color: white;
+  padding: 30px 50px;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.dashboard-title {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #0A3A96;
+}
+
+.admin-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #0A3A96;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.admin-text {
+  color: #0A3A96;
+  font-weight: 600;
+}
+
+.cards-container {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}

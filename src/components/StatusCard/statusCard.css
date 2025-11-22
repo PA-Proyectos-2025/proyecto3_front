@@ -1,0 +1,54 @@
+.status-card {
+  width: 240px;              /* antes 180px */
+  padding: 40px;             /* antes 30px */
+  border-radius: 30px;       /* antes 25px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 600;
+  text-align: center;
+  gap: 14px;                 /* antes 10px */
+  transition: transform 0.3s ease;
+}
+
+.status-card:hover {
+  transform: scale(1.05);
+}
+
+.status-card .value {
+  font-size: 64px;           /* antes 48px */
+}
+
+.status-card .label {
+  font-size: 16px;           /* antes 14px */
+  text-transform: uppercase;
+}
+
+.status-card .icon {
+  font-size: 32px;           /* antes 26px */
+}
+
+/* COLORES */
+.status-card.yellow {
+  background-color: #FFF6C7;
+  border: 3px solid #F7D77A;
+  color: #8A6A00;
+}
+
+.status-card.blue {
+  background-color: #E5F2FF;
+  border: 3px solid #73B5FF;
+  color: #0057B8;
+}
+
+.status-card.green {
+  background-color: #E9FFE9;
+  border: 3px solid #79D779;
+  color: #0F8B0F;
+}
+
+.status-card.red {
+  background-color: #FFE5E5;
+  border: 3px solid #FF7A7A;
+  color: #C40000;
+}
