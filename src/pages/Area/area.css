@@ -210,8 +210,9 @@
   font-weight: bold;
 }
 
+/* 🔸 Botón Editar: naranja siempre */
 .btn-edit {
-  background-color: #FF9800;
+  background-color: #FF9800 !important;
   color: white;
 }
 
@@ -220,8 +221,9 @@
   transform: scale(1.1);
 }
 
+/* 🔴 Botón Borrar: rojo siempre */
 .btn-delete {
-  background-color: #F44336;
+  background-color: #F44336 !important;
   color: white;
   font-size: 1.5rem;
 }
