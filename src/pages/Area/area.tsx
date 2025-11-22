@@ -1,38 +1,68 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/sidebar";
-import { getAreas, deleteArea } from "../../api/areas";
+import { getAreas, deleteArea, getUsers, type Area } from "../../api/areas";
+import AreaForm from "../../components/AreaForm/areaForm";
 import "./area.css";
 
-type Area = {
+type User = {
   id: string;
-  nombre: string;
-  descripcion: string;
+  name: string;
+  email: string;
 };
 
 export default function Areas() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [areas, setAreas] = useState<Area[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    loadAreas();
+    loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      console.log('🚀 Cargando datos iniciales...'); // Debug
+      
+      // Primero cargamos las áreas (obligatorio)
+      const areasData = await getAreas();
+      setAreas(areasData);
+      console.log('📦 Áreas cargadas:', areasData.length); // Debug
+      
+      // Intentamos cargar usuarios (opcional)
+      try {
+        const usersData = await getUsers();
+        setUsers(usersData);
+        console.log('👥 Usuarios cargados:', usersData.length); // Debug
+      } catch (userErr) {
+        console.warn('⚠️ No se pudieron cargar usuarios:', userErr);
+        setUsers([]); // Si falla, dejamos array vacío
+      }
+      
+      setError("");
+    } catch (err) {
+      console.error('💥 Error al cargar datos:', err); // Debug
+      setError("Error al cargar los datos");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadAreas = async () => {
     try {
-      setLoading(true);
       const data = await getAreas();
-      console.log("Áreas recibidas:", data); // 👀 debug
       setAreas(data);
       setError("");
     } catch (err) {
       setError("Error al cargar las áreas");
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -40,7 +70,7 @@ export default function Areas() {
     if (window.confirm("¿Estás seguro de que deseas eliminar esta área?")) {
       try {
         await deleteArea(id);
-        await loadAreas(); // Recargar la lista
+        await loadAreas();
       } catch (err) {
         setError("Error al eliminar el área");
         console.error(err);
@@ -48,8 +78,36 @@ export default function Areas() {
     }
   };
 
-  const filteredAreas = areas.filter((area) =>
-    area.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleEdit = (area: Area) => {
+    setSelectedArea(area);
+    setIsFormOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedArea(null);
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setSelectedArea(null);
+  };
+
+  const handleFormSuccess = async () => {
+    await loadAreas();
+    handleFormClose();
+  };
+
+  const getResponsableName = (id_responsable: string | null) => {
+    if (!id_responsable) return "Sin asignar";
+    const user = users.find((u) => u.id === id_responsable);
+    return user ? user.name : "Desconocido";
+  };
+
+  const filteredAreas = areas.filter(
+    (area) =>
+      area.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      area.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredAreas.length / itemsPerPage);
@@ -90,7 +148,7 @@ export default function Areas() {
             <span className="search-icon">🔍</span>
             <input
               type="text"
-              placeholder="Buscar área"
+              placeholder="Buscar área por nombre o email"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -104,7 +162,7 @@ export default function Areas() {
             )}
           </div>
 
-          <button className="btn-add">
+          <button className="btn-add" onClick={handleAdd}>
             Agregar <span className="plus-icon">+</span>
           </button>
         </div>
@@ -115,13 +173,15 @@ export default function Areas() {
               <tr>
                 <th>Nombre</th>
                 <th>Descripción</th>
+                <th>Email</th>
+                <th>Responsable</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedAreas.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="no-data">
+                  <td colSpan={5} className="no-data">
                     No se encontraron áreas
                   </td>
                 </tr>
@@ -130,9 +190,18 @@ export default function Areas() {
                   <tr key={area.id}>
                     <td className="td-nombre">{area.nombre}</td>
                     <td className="td-descripcion">{area.descripcion}</td>
+                    <td className="td-email">{area.email}</td>
+                    <td className="td-responsable">
+                      {getResponsableName(area.id_responsable_area)}
+                    </td>
                     <td>
                       <div className="action-buttons">
-                        <button className="btn-edit">✏️</button>
+                        <button
+                          className="btn-edit"
+                          onClick={() => handleEdit(area)}
+                        >
+                          ✏️
+                        </button>
                         <button
                           className="btn-delete"
                           onClick={() => handleDelete(area.id)}
@@ -172,6 +241,15 @@ export default function Areas() {
           </div>
         )}
       </div>
+
+      {isFormOpen && (
+        <AreaForm
+          area={selectedArea}
+          users={users}
+          onClose={handleFormClose}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 }
