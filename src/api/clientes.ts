@@ -1,16 +1,17 @@
-const API_URL = "http://localhost:3000"; // Ajusta según tu backend
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'; // Ajusta según tu backend
 
 export const getClientes = async () => {
-  const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/clientes`, {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/cliente`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
 
   if (!response.ok) {
-    throw new Error("Error al obtener los clientes");
+    const txt = await response.text();
+    throw new Error(`Error al obtener los clientes: ${response.status} ${txt}`);
   }
 
   return response.json();
@@ -23,18 +24,19 @@ export const createCliente = async (clienteData: {
   direccion: string;
   razonSocial: string;
 }) => {
-  const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/clientes`, {
-    method: "POST",
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/cliente`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(clienteData),
   });
 
   if (!response.ok) {
-    throw new Error("Error al crear el cliente");
+    const txt = await response.text();
+    throw new Error(`Error al crear el cliente: ${response.status} ${txt}`);
   }
 
   return response.json();
@@ -50,35 +52,37 @@ export const updateCliente = async (
     razonSocial?: string;
   }
 ) => {
-  const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/clientes/${id}`, {
-    method: "PUT",
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/cliente/${id}`, {
+    method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(clienteData),
   });
 
   if (!response.ok) {
-    throw new Error("Error al actualizar el cliente");
+    const txt = await response.text();
+    throw new Error(`Error al actualizar el cliente: ${response.status} ${txt}`);
   }
 
   return response.json();
 };
 
 export const deleteCliente = async (id: string) => {
-  const token = localStorage.getItem("token");
-  const response = await fetch(`${API_URL}/clientes/${id}`, {
-    method: "DELETE",
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_URL}/cliente/${id}`, {
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
 
   if (!response.ok) {
-    throw new Error("Error al eliminar el cliente");
+    const txt = await response.text();
+    throw new Error(`Error al eliminar el cliente: ${response.status} ${txt}`);
   }
 
   return response.json();

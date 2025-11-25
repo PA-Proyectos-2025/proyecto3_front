@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export type Area = {
   id: string;
@@ -90,7 +90,7 @@ export const updateArea = async (
   const token = localStorage.getItem("token");
   
   // Filtrar solo los campos que tienen valor
-  const filteredData: any = {};
+  const filteredData: Record<string, unknown> = {};
   if (areaData.nombre !== undefined) filteredData.nombre = areaData.nombre;
   if (areaData.descripcion !== undefined) filteredData.descripcion = areaData.descripcion;
   if (areaData.email !== undefined) filteredData.email = areaData.email;
