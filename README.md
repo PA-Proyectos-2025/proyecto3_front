@@ -1,73 +1,75 @@
-# React + TypeScript + Vite
+# Proyecto3_front
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Frontend del proyecto (React + Vite + TypeScript). Interfaz para crear/editar/eliminar reclamos, gestionar catálogos y visualizar datos.
 
-Currently, two official plugins are available:
+## Resumen
+- Framework: React
+- Bundler: Vite
+- Lenguaje: TypeScript
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Requisitos
+- Node.js 18+ y npm
+- Backend corriendo (por defecto `http://localhost:3000`)
 
-## React Compiler
+## Variables de entorno
+Crear un archivo `.env` o `.env.local` en la carpeta `proyecto3_front` con:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+VITE_API_URL=http://localhost:3000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Instalación
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+En PowerShell, desde `proyecto3_front`:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```powershell
+npm install
 ```
+
+## Ejecutar en desarrollo
+
+```powershell
+npm run dev
+```
+
+Abre el navegador en la URL que Vite muestre (por defecto `http://localhost:5173`).
+
+## Build y preview
+
+```powershell
+npm run build
+npm run preview
+```
+
+## Funcionalidades relevantes
+- Crear reclamos mediante modal (`ReclamoForm`).
+- Editar reclamos: haz clic en el icono ✏️ en la lista de reclamos para abrir el modal con datos precargados.
+- Borrar reclamos mediante el botón ✕ en la tabla (realiza soft-delete en backend).
+
+## Token de autenticación
+Algunas rutas requieren JWT. El frontend guarda el token en `localStorage` bajo la clave `token`. Para pruebas manuales puedes hacer:
+
+```javascript
+localStorage.setItem('token', '<TU_JWT_AQUI>')
+```
+
+## Problemas comunes & soluciones
+- `Filename too long` o `git add` fallando: añade `**/node_modules/` a `.gitignore` y usa `git rm -r --cached node_modules` o mueve el repo a una ruta más corta.
+- Advertencias LF/CRLF: ejecuta `git add --renormalize .` si aplicaste `.gitattributes`.
+
+## Desarrollo y testing rápido
+- Para probar la creación de reclamos desde PowerShell (ejemplo):
+
+```powershell
+$body = @{ titulo='Reclamo prueba automatizada'; descripcion='Prueba desde PowerShell'; archivos=@(); tipoReclamoId='ID_TIPO'; prioridadId='ID_PRIORIDAD'; nivelCriticidadId='ID_NIVEL'; proyectoId='ID_PROYECTO'; clienteId='ID_CLIENTE'; areaId='ID_AREA'; subareaId='ID_SUBAREA' } | ConvertTo-Json -Depth 10
+Invoke-RestMethod -Method Post -Uri 'http://localhost:3000/reclamo' -Body $body -ContentType 'application/json'
+```
+
+## Estructura relevante
+- `src/api/` : helpers para llamadas a la API (reclamos, catálogos, clientes, proyectos, etc.).
+- `src/components/ReclamoForm/reclamoForm.tsx` : formulario/modal para crear/editar reclamos.
+- `src/pages/Reclamos/reclamo.tsx` : listado, botones de acción y wiring del modal.
+
+## Consejos
+- Asegúrate de que `VITE_API_URL` apunta al backend correcto.
+- Si ves errores 401 al cargar `/users`, agrega temporalmente un token en `localStorage` para pruebas.
