@@ -12,7 +12,7 @@ export default function Login() {
 
     try {
       const response = await login(email, password);
-      localStorage.setItem("token", response.token);
+      localStorage.setItem("token", response.access_token);
       window.location.href = "/dashboard";
     } catch (e) {
       setError("Credenciales incorrectas");

@@ -40,6 +40,20 @@ export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormPr
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    
+    // 🔍 DEBUG: Ver qué se selecciona
+    if (name === 'id_responsable_area') {
+      console.log('🔄 Valor seleccionado en el select:', value);
+      console.log('🔄 Tipo:', typeof value);
+      
+      // Buscar el usuario en la lista
+      const selectedUser = users.find(u => u.id === value);
+      console.log('👤 Usuario encontrado en la lista:', selectedUser);
+      
+      // Ver todos los IDs disponibles
+      console.log('📋 Todos los IDs de usuarios:', users.map(u => u.id));
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -49,12 +63,21 @@ export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormPr
     setLoading(true);
 
     try {
+      // ✅ SOLUCIÓN: Solo incluir id_responsable_area si tiene un valor válido
       const dataToSend: CreateAreaDto = {
         nombre: formData.nombre,
         descripcion: formData.descripcion,
         email: formData.email,
-        id_responsable_area: formData.id_responsable_area || undefined,
       };
+
+      // Solo agregar id_responsable_area si existe y no es vacío
+      if (formData.id_responsable_area && formData.id_responsable_area.trim() !== '') {
+        dataToSend.id_responsable_area = formData.id_responsable_area;
+      }
+
+      console.log('📤 Enviando datos:', dataToSend);
+      console.log('📤 id_responsable_area específicamente:', dataToSend.id_responsable_area);
+      console.log('📤 Tipo:', typeof dataToSend.id_responsable_area);
 
       if (area) {
         await updateArea(area.id, dataToSend);
@@ -64,8 +87,8 @@ export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormPr
 
       onSuccess();
     } catch (err) {
+      console.error('💥 Error completo:', err); // Debug
       setError(area ? "Error al actualizar el área" : "Error al crear el área");
-      console.error(err);
     } finally {
       setLoading(false);
     }
