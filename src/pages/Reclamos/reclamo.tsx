@@ -166,13 +166,16 @@ export default function Reclamos() {
       let prioridadNombre = reclamo.prioridadId;
       let nivelCriticidadNombre = reclamo.nivelCriticidadId;
       let tipoReclamoNombre = reclamo.tipoReclamoId;
-      
+
       try {
         const cliente = await getClienteById(reclamo.clienteId);
         console.log('✅ Cliente obtenido:', cliente);
-        clienteNombre = cliente?.nombre || cliente?.razonSocial || reclamo.clienteId;
+        console.log('📝 Nombre del cliente:', cliente?.nombre);
+        console.log('🔍 Propiedades del cliente:', Object.keys(cliente || {}));
+        clienteNombre = cliente?.nombre || reclamo.clienteId;
       } catch (err) {
         console.error('❌ Error cargando cliente:', err);
+        clienteNombre = reclamo.clienteId;
       }
       
       try {

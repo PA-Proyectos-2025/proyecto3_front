@@ -130,10 +130,13 @@ export const getClienteById = async (id: string): Promise<Cliente> => {
   }
 
   const data = await response.json();
+  
+  // 🔍 DEBUG: Ver qué devuelve el backend
+  console.log('🌐 Data RAW del backend (cliente):', JSON.stringify(data, null, 2));
 
   return {
-    _id: data._id?.toString() || data.id, // ⚠️ normalizamos a _id
-    nombre: data.nombre,
+    _id: data._id?.toString() || data.id,
+    nombre: data.name || data.nombre, // ✅ Maneja ambos casos
     email: data.email,
     cuit: data.cuit,
     direccion: data.direccion,
@@ -142,8 +145,6 @@ export const getClienteById = async (id: string): Promise<Cliente> => {
     deleted: data.deleted,
   };
 };
-
-
 
 export const createCliente = async (clienteData: CreateClienteDto): Promise<Cliente> => {
   const token = localStorage.getItem('token');
