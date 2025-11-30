@@ -2,6 +2,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 export type Cliente = {
   _id: string;
+  id?: string; // ← agregado
   nombre: string;
   email: string;
   cuit: string;
@@ -128,8 +129,21 @@ export const getClienteById = async (id: string): Promise<Cliente> => {
     throw new Error('Error al obtener el cliente');
   }
 
-  return response.json();
+  const data = await response.json();
+
+  return {
+    _id: data._id?.toString() || data.id, // ⚠️ normalizamos a _id
+    nombre: data.nombre,
+    email: data.email,
+    cuit: data.cuit,
+    direccion: data.direccion,
+    razonSocial: data.razonSocial || data.razon_social,
+    telefono: data.telefono,
+    deleted: data.deleted,
+  };
 };
+
+
 
 export const createCliente = async (clienteData: CreateClienteDto): Promise<Cliente> => {
   const token = localStorage.getItem('token');

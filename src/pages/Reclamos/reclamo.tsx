@@ -2,16 +2,29 @@ import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/sidebar";
 import { getReclamos, deleteReclamo, getReclamo } from "../../api/reclamos";
 import ReclamoForm from "../../components/ReclamoForm/reclamoForm";
+import { getClienteById } from "../../api/clientes";
+import { getProyectoById } from "../../api/proyectos";
+import { getPrioridadById } from "../../api/prioridad";
+import { getNivelCriticidadById } from "../../api/nivelCriticidad";
+import { getTipoReclamoById } from "../../api/tiposReclamos";
+
 import "./reclamo.css";
 
 type Reclamo = {
   _id: string;
+  id?: string;
   titulo: string;
-  area: string;
-  fecha: string;
-  estado: string;
-  cliente: string;
-  proyecto: string;
+  descripcion?: string;
+  fechaCreacion: string;
+  fechaCierre?: string | null;
+  archivos: string[];
+  clienteId: string;
+  proyectoId: string;
+  prioridadId: string;
+  nivelCriticidadId: string;
+  tipoReclamoId: string;
+  deleted: boolean;
+  deletedAt?: string | null;
 };
 
 type ReclamoDetail = {
@@ -24,8 +37,6 @@ type ReclamoDetail = {
   nivelCriticidadId?: string;
   proyectoId?: string;
   clienteId?: string;
-  areaId?: string;
-  subareaId?: string;
 };
 
 export default function Reclamos() {
@@ -34,7 +45,28 @@ export default function Reclamos() {
   const [reclamos, setReclamos] = useState<Reclamo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const itemsPerPage = 10;
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingReclamo, setEditingReclamo] = useState<ReclamoDetail | null>(null);
+  const [selectedReclamo, setSelectedReclamo] = useState<Reclamo | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  
+  // Estados para los nombres de las relaciones
+  const [detailsData, setDetailsData] = useState<{
+    clienteNombre: string;
+    proyectoNombre: string;
+    prioridadNombre: string;
+    nivelCriticidadNombre: string;
+    tipoReclamoNombre: string;
+  }>({
+    clienteNombre: '',
+    proyectoNombre: '',
+    prioridadNombre: '',
+    nivelCriticidadNombre: '',
+    tipoReclamoNombre: '',
+  });
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  
+  const itemsPerPage = 3;
 
   useEffect(() => {
     loadReclamos();
@@ -44,6 +76,10 @@ export default function Reclamos() {
     try {
       setLoading(true);
       const data = await getReclamos();
+      
+      console.log('📋 Reclamos recibidos:', data);
+      console.log('📋 Primer reclamo RAW:', JSON.stringify(data[0], null, 2));
+      
       setReclamos(data);
       setError("");
     } catch (err) {
@@ -57,23 +93,21 @@ export default function Reclamos() {
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este reclamo?")) {
       try {
+        console.log("🗑️ Eliminando reclamo con ID:", id);
         await deleteReclamo(id);
+        console.log("✅ Reclamo eliminado exitosamente");
         await loadReclamos();
-      } catch (err) {
-        setError("Error al eliminar el reclamo");
-        console.error(err);
+      } catch (err: any) {
+        console.error("💥 Error al eliminar:", err);
+        setError(err.message || "Error al eliminar el reclamo");
       }
     }
   };
 
   const handleAdd = async () => {
-    // Abrir modal de creación (el formulario cargará los catálogos necesarios)
     setEditingReclamo(null);
     setIsFormOpen(true);
   };
-
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingReclamo, setEditingReclamo] = useState<ReclamoDetail | null>(null);
 
   const handleFormClose = () => {
     setIsFormOpen(false);
@@ -102,8 +136,6 @@ export default function Reclamos() {
         nivelCriticidadId: rec.nivelCriticidadId,
         proyectoId: rec.proyectoId,
         clienteId: rec.clienteId,
-        areaId: rec.areaId,
-        subareaId: rec.subareaId,
       };
       setEditingReclamo(mapped);
       setIsFormOpen(true);
@@ -115,10 +147,94 @@ export default function Reclamos() {
     }
   };
 
-  
+  const handleShowDetails = async (reclamo: Reclamo) => {
+    setSelectedReclamo(reclamo);
+    setShowDetailModal(true);
+    setLoadingDetails(true);
+    
+    try {
+      console.log('🔍 Cargando detalles para reclamo:', reclamo);
+      console.log('📌 IDs a buscar:', {
+        clienteId: reclamo.clienteId,
+        proyectoId: reclamo.proyectoId,
+        prioridadId: reclamo.prioridadId,
+        nivelCriticidadId: reclamo.nivelCriticidadId,
+        tipoReclamoId: reclamo.tipoReclamoId
+      });
+      let clienteNombre = reclamo.clienteId;
+      let proyectoNombre = reclamo.proyectoId;
+      let prioridadNombre = reclamo.prioridadId;
+      let nivelCriticidadNombre = reclamo.nivelCriticidadId;
+      let tipoReclamoNombre = reclamo.tipoReclamoId;
+      
+      try {
+        const cliente = await getClienteById(reclamo.clienteId);
+        console.log('✅ Cliente obtenido:', cliente);
+        clienteNombre = cliente?.nombre || cliente?.razonSocial || reclamo.clienteId;
+      } catch (err) {
+        console.error('❌ Error cargando cliente:', err);
+      }
+      
+      try {
+        const proyecto = await getProyectoById(reclamo.proyectoId);
+        console.log('✅ Proyecto obtenido:', proyecto);
+        proyectoNombre = proyecto?.nombre || proyecto?.nombre || reclamo.proyectoId;
+      } catch (err) {
+        console.error('❌ Error cargando proyecto:', err);
+      }
+      
+      try {
+        const prioridad = await getPrioridadById(reclamo.prioridadId);
+        console.log('✅ Prioridad obtenida:', prioridad);
+        prioridadNombre = prioridad?.nombre || reclamo.prioridadId;
+      } catch (err) {
+        console.error('❌ Error cargando prioridad:', err);
+      }
+      
+      try {
+        const nivelCriticidad = await getNivelCriticidadById(reclamo.nivelCriticidadId);
+        console.log('✅ Nivel de Criticidad obtenido:', nivelCriticidad);
+        nivelCriticidadNombre = nivelCriticidad?.nombre || nivelCriticidad?.descripcion || reclamo.nivelCriticidadId;
+      } catch (err) {
+        console.error('❌ Error cargando nivel de criticidad:', err);
+      }
+      
+      try {
+        const tipoReclamo = await getTipoReclamoById(reclamo.tipoReclamoId);
+        console.log('✅ Tipo de Reclamo obtenido:', tipoReclamo);
+        tipoReclamoNombre = tipoReclamo?.nombre || tipoReclamo?.descripcion || reclamo.tipoReclamoId;
+      } catch (err) {
+        console.error('❌ Error cargando tipo de reclamo:', err);
+      }
+      
+      setDetailsData({
+        clienteNombre,
+        proyectoNombre,
+        prioridadNombre,
+        nivelCriticidadNombre,
+        tipoReclamoNombre,
+      });
+    } catch (err) {
+      console.error('💥 Error general cargando detalles:', err);
+      setDetailsData({
+        clienteNombre: reclamo.clienteId,
+        proyectoNombre: reclamo.proyectoId,
+        prioridadNombre: reclamo.prioridadId,
+        nivelCriticidadNombre: reclamo.nivelCriticidadId,
+        tipoReclamoNombre: reclamo.tipoReclamoId,
+      });
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedReclamo(null);
+  };
 
   const filteredReclamos = reclamos.filter((r) =>
-    r.titulo.toLowerCase().includes(searchTerm.toLowerCase())
+    r.titulo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredReclamos.length / itemsPerPage);
@@ -138,6 +254,7 @@ export default function Reclamos() {
       </div>
     );
   }
+  
   const role = localStorage.getItem("role") || "USUARIO";
 
   return (
@@ -180,7 +297,11 @@ export default function Reclamos() {
         </div>
 
         {isFormOpen && (
-          <ReclamoForm reclamo={editingReclamo} onClose={handleFormClose} onSuccess={handleFormSuccess} />
+          <ReclamoForm 
+            reclamo={editingReclamo} 
+            onClose={handleFormClose} 
+            onSuccess={handleFormSuccess} 
+          />
         )}
 
         <div className="table-container">
@@ -188,18 +309,17 @@ export default function Reclamos() {
             <thead>
               <tr>
                 <th>Título</th>
-                <th>Área</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Cliente</th>
-                <th>Proyecto</th>
+                <th>Descripción</th>
+                <th>Fecha Creación</th>
+                <th>Fecha Cierre</th>
+                <th>Ver Más</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {paginatedReclamos.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="no-data">
+                  <td colSpan={6} className="no-data">
                     No se encontraron reclamos
                   </td>
                 </tr>
@@ -207,20 +327,45 @@ export default function Reclamos() {
                 paginatedReclamos.map((r, idx) => {
                   const obj = r as unknown as { _id?: string; id?: string };
                   const rid = obj._id ?? obj.id ?? '';
+                  
                   return (
                     <tr key={rid ?? `r-${startIndex + idx}`}>
                       <td className="td-titulo">{r.titulo}</td>
-                      <td>{r.area}</td>
-                      <td>{r.fecha}</td>
-                      <td>{r.estado}</td>
-                      <td>{r.cliente}</td>
-                      <td>{r.proyecto}</td>
+                      <td className="td-descripcion">
+                        {r.descripcion 
+                          ? (r.descripcion.length > 50 
+                              ? r.descripcion.substring(0, 50) + '...' 
+                              : r.descripcion)
+                          : 'Sin descripción'}
+                      </td>
+                      <td>{new Date(r.fechaCreacion).toLocaleDateString()}</td>
+                      <td>
+                        {r.fechaCierre 
+                          ? new Date(r.fechaCierre).toLocaleDateString() 
+                          : '-'}
+                      </td>
+                      <td>
+                        <button 
+                          className="btn-details"
+                          onClick={() => handleShowDetails(r)}
+                          title="Ver detalles completos"
+                        >
+                          👁️ Detalles
+                        </button>
+                      </td>
                       <td>
                         <div className="action-buttons">
-                          <button className="btn-edit" onClick={() => handleEdit(rid)}>✏️</button>
+                          <button 
+                            className="btn-edit" 
+                            onClick={() => handleEdit(rid)}
+                            title="Editar"
+                          >
+                            ✏️
+                          </button>
                           <button
                             className="btn-delete"
                             onClick={() => rid ? handleDelete(rid) : setError('ID de reclamo inválido')}
+                            title="Eliminar"
                           >
                             ✕
                           </button>
@@ -234,7 +379,7 @@ export default function Reclamos() {
           </table>
         </div>
 
-        {totalPages > 0 && (
+        {totalPages > 1 && (
           <div className="pagination">
             <button
               className="pagination-btn"
@@ -258,6 +403,106 @@ export default function Reclamos() {
           </div>
         )}
       </div>
+
+      {/* Modal de Detalles */}
+      {showDetailModal && selectedReclamo && (
+        <div className="modal-overlay" onClick={handleCloseDetailModal}>
+          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📋 Detalles del Reclamo</h2>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detail-section">
+                <h3>Información General</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">Título:</span>
+                    <span className="detail-value">{selectedReclamo.titulo}</span>
+                  </div>
+                  <div className="detail-item full-width">
+                    <span className="detail-label">Descripción:</span>
+                    <span className="detail-value">{selectedReclamo.descripcion || 'Sin descripción'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <h3>Fechas</h3>
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">Fecha de Creación:</span>
+                    <span className="detail-value">
+                      {new Date(selectedReclamo.fechaCreacion).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Fecha de Cierre:</span>
+                    <span className="detail-value">
+                      {selectedReclamo.fechaCierre 
+                        ? new Date(selectedReclamo.fechaCierre).toLocaleString() 
+                        : 'No cerrado'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <h3>Clasificación</h3>
+                {loadingDetails ? (
+                  <div className="loading-details">Cargando detalles...</div>
+                ) : (
+                  <div className="detail-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">Cliente:</span>
+                      <span className="detail-value">{detailsData.clienteNombre}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Proyecto:</span>
+                      <span className="detail-value">{detailsData.proyectoNombre}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Prioridad:</span>
+                      <span className="detail-value">{detailsData.prioridadNombre}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Nivel de Criticidad:</span>
+                      <span className="detail-value">{detailsData.nivelCriticidadNombre}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Tipo de Reclamo:</span>
+                      <span className="detail-value">{detailsData.tipoReclamoNombre}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="detail-section">
+                <h3>Archivos Adjuntos</h3>
+                <div className="detail-item">
+                  <span className="detail-label">Cantidad de archivos:</span>
+                  <span className="detail-value">{selectedReclamo.archivos?.length || 0}</span>
+                </div>
+                {selectedReclamo.archivos && selectedReclamo.archivos.length > 0 && (
+                  <div className="archivos-list">
+                    {selectedReclamo.archivos.map((archivo, idx) => (
+                      <div key={idx} className="archivo-item">
+                        📎 {archivo}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-modal-close" onClick={handleCloseDetailModal}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
