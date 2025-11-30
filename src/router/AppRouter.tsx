@@ -16,6 +16,7 @@ export default function AppRouter() {
         <Route path="/areas" element={<Area />} />
         <Route path="/subareas" element={<Subarea />} />
         <Route path="/clientes" element={<Cliente />} />
+        <Route path="/cliente" element={<Cliente />} />
         <Route path="/proyectos" element={<Proyecto />} />
         <Route path="/reclamos" element={<Reclamo />} />
         
