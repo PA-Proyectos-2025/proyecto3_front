@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/sidebar";
-import { getProyectos, deleteProyecto } from "../../api/proyectos";
+import { 
+  getProyectos, 
+  deleteProyecto,
+  getEstadosProyecto,
+  getTiposProyecto,
+  getClientes,
+  getUsers,
+  type Proyecto
+} from "../../api/proyectos";
+import ProyectoForm from "../../components/ProyectoForm/proyectoForm";
 import "./proyecto.css";
-
-type Proyecto = {
-  _id: string;
-  nombre: string;
-  descripcion?: string;
-  cliente: string;
-  fechaInicio: string;
-  fechaFin: string;
-  estado: string;
-};
 
 export default function Proyectos() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,36 +18,127 @@ export default function Proyectos() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const itemsPerPage = 10;
+  
+  // Estados para catálogos
+  const [estados, setEstados] = useState<any[]>([]);
+  const [tipos, setTipos] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  
+  // Estados para el formulario
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedProyecto, setSelectedProyecto] = useState<Proyecto | null>(null);
+  
+  const itemsPerPage = 3;
 
   useEffect(() => {
-    loadProyectos();
+    loadInitialData();
   }, []);
 
-  const loadProyectos = async () => {
+  const loadInitialData = async () => {
     try {
       setLoading(true);
-      const data = await getProyectos();
-      setProyectos(data);
+      
+      console.log('🚀 Iniciando carga...');
+      
+      // Cargar en paralelo
+      const [
+        proyectosData, 
+        estadosData, 
+        tiposData,
+        clientesData,
+        usuariosData,
+      ] = await Promise.all([
+        getProyectos(),
+        getEstadosProyecto().catch((e) => { 
+          console.error('❌ Error cargando estados:', e); 
+          return []; 
+        }),
+        getTiposProyecto().catch((e) => { 
+          console.error('❌ Error cargando tipos:', e); 
+          return []; 
+        }),
+        getClientes().catch((e) => { 
+          console.error('❌ Error cargando clientes:', e); 
+          return []; 
+        }),
+        getUsers().catch((e) => { 
+          console.error('❌ Error cargando usuarios:', e); 
+          return []; 
+        }),
+      ]);
+      
+      console.log('📦 Proyectos cargados:', proyectosData);
+      console.log('📊 Estados cargados:', estadosData);
+      console.log('📋 Tipos cargados:', tiposData);
+      console.log('👥 Clientes cargados:', clientesData);
+      console.log('👤 Usuarios cargados:', usuariosData);
+      
+      setProyectos(proyectosData);
+      setEstados(estadosData);
+      setTipos(tiposData);
+      setClientes(clientesData);
+      setUsuarios(usuariosData);
+
+      console.log('📦 Proyectos cargados:', proyectosData);
+      console.log('📦 PRIMER PROYECTO COMPLETO:', JSON.stringify(proyectosData[0], null, 2)); // ← AGREGA ESTA LÍNEA
+      console.log('📊 Estados cargados:', estadosData);
+      
       setError("");
     } catch (err) {
-      setError("Error al cargar los proyectos");
-      console.error(err);
+      setError("Error al cargar los datos");
+      console.error('💥 Error general:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const getEstadoNombre = (estadoId: string) => {
+    if (!estadoId) return "Sin estado";
+    const estado = estados.find((e) => e.id === estadoId || e._id === estadoId);
+    return estado ? estado.nombre : `ID: ${estadoId}`;
+  };
+
+  const getClienteNombre = (clienteId: string) => {
+    if (!clienteId) return "Sin cliente";
+    const cliente = clientes.find((c) => c.id === clienteId || c._id === clienteId);
+    return cliente ? cliente.nombre : `ID: ${clienteId}`;
+  };
+
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este proyecto?")) {
       try {
+        console.log("🗑️ Eliminando proyecto con ID:", id);
         await deleteProyecto(id);
-        await loadProyectos();
-      } catch (err) {
-        setError("Error al eliminar el proyecto");
-        console.error(err);
+        console.log("✅ Proyecto eliminado exitosamente");
+        await loadInitialData();
+      } catch (err: any) {
+        console.error("💥 Error al eliminar:", err);
+        setError(err.message || "Error al eliminar el proyecto");
+        alert("Error al eliminar el proyecto");
       }
     }
+};
+
+  const handleEdit = (proyecto: Proyecto) => {
+    console.log("✏️ Editando proyecto:", proyecto);
+    setSelectedProyecto(proyecto);
+    setIsFormOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedProyecto(null);
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setSelectedProyecto(null);
+  };
+
+  const handleFormSuccess = async () => {
+    await loadInitialData();
+    handleFormClose();
   };
 
   const filteredProyectos = proyectos.filter((p) =>
@@ -107,7 +197,7 @@ export default function Proyectos() {
             )}
           </div>
 
-          <button className="btn-add">
+          <button className="btn-add" onClick={handleAdd}>
             Agregar <span className="plus-icon">+</span>
           </button>
         </div>
@@ -119,7 +209,8 @@ export default function Proyectos() {
                 <th>Nombre</th>
                 <th>Descripción</th>
                 <th>Cliente</th>
-                <th>Fecha inicio/fin</th>
+                <th>Fecha inicio</th>
+                <th>Fecha fin</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -127,21 +218,27 @@ export default function Proyectos() {
             <tbody>
               {paginatedProyectos.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="no-data">
+                  <td colSpan={7} className="no-data">
                     No se encontraron proyectos
                   </td>
                 </tr>
               ) : (
                 paginatedProyectos.map((p) => (
                   <tr key={p._id}>
-                    <td>{p.nombre}</td>
-                    <td>{p.descripcion}</td>
-                    <td>{p.cliente}</td>
-                    <td>{p.fechaInicio} - {p.fechaFin}</td>
-                    <td>{p.estado}</td>
+                    <td className="td-nombre">{p.nombre}</td>
+                    <td>{p.descripcion || 'Sin descripción'}</td>
+                    <td>{getClienteNombre(p.id_cliente)}</td>
+                    <td>{new Date(p.fecha_hora_inicio).toLocaleDateString()}</td>
+                    <td>{new Date(p.fecha_hora_fin).toLocaleDateString()}</td>
+                    <td>{getEstadoNombre(p.estadoProyectoId)}</td>
                     <td>
                       <div className="action-buttons">
-                        <button className="btn-edit">✏️</button>
+                        <button 
+                          className="btn-edit"
+                          onClick={() => handleEdit(p)}
+                        >
+                          ✏️
+                        </button>
                         <button
                           className="btn-delete"
                           onClick={() => handleDelete(p._id)}
@@ -157,7 +254,7 @@ export default function Proyectos() {
           </table>
         </div>
 
-        {totalPages > 0 && (
+        {totalPages > 1 && (
           <div className="pagination">
             <button
               className="pagination-btn"
@@ -181,6 +278,18 @@ export default function Proyectos() {
           </div>
         )}
       </div>
+
+      {isFormOpen && (
+        <ProyectoForm
+          proyecto={selectedProyecto}
+          estados={estados}
+          tipos={tipos}
+          clientes={clientes}
+          usuarios={usuarios}
+          onClose={handleFormClose}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 }
