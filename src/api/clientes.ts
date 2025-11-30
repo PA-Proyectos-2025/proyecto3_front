@@ -68,7 +68,7 @@ export const getClientes = async (): Promise<Cliente[]> => {
   // Mapear para asegurar estructura correcta
   const mapped = data.map((cliente: any) => ({
     _id: cliente._id || cliente.id,
-    nombre: cliente.name || '',
+    nombre: cliente.name || cliente.nombre, // ✅ Maneja ambos casos
     email: cliente.email || '',
     cuit: cliente.cuit || '',
     direccion: cliente.direccion || '',
