@@ -100,6 +100,7 @@ export default function Clientes() {
       </div>
     );
   }
+  const role = localStorage.getItem("role") || "USUARIO";
 
   return (
     <div className="clientes-container">
@@ -109,8 +110,8 @@ export default function Clientes() {
         <div className="clientes-header">
           <h1 className="clientes-title">Clientes</h1>
           <div className="admin-badge">
-            <div className="admin-avatar"></div>
-            <span className="admin-text">ADMINISTRADOR</span>
+            <div className="admin-avatar">👩‍💻</div>
+            <span className="admin-text">{role.toUpperCase()}</span>
           </div>
         </div>
 

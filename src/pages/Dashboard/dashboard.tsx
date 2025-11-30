@@ -3,6 +3,8 @@ import StatusCard from "../../components/StatusCard/statusCard";
 import "./dashboard.css";
 
 export default function Dashboard() {
+  const role = localStorage.getItem("role") || "USUARIO";
+
   return (
     <div className="dashboard-container">
       <Sidebar />
@@ -11,8 +13,8 @@ export default function Dashboard() {
         <div className="dashboard-header">
           <h1 className="dashboard-title">Panel de Administración</h1>
           <div className="admin-badge">
-            <div className="admin-avatar"></div>
-            <span className="admin-text">ADMINISTRADOR</span>
+            <div className="admin-avatar">👩‍💻</div>
+            <span className="admin-text">{role.toUpperCase()}</span>
           </div>
         </div>
 

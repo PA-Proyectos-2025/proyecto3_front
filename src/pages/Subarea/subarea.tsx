@@ -143,6 +143,7 @@ export default function Subareas() {
       </div>
     );
   }
+  const role = localStorage.getItem("role") || "USUARIO";
 
   return (
     <div className="subareas-container">
@@ -152,8 +153,8 @@ export default function Subareas() {
         <div className="subareas-header">
           <h1 className="subareas-title">Subáreas</h1>
           <div className="admin-badge">
-            <div className="admin-avatar"></div>
-            <span className="admin-text">ADMINISTRADOR</span>
+            <div className="admin-avatar">👩‍💻</div>
+            <span className="admin-text">{role.toUpperCase()}</span>
           </div>
         </div>
 

@@ -26,7 +26,6 @@ export default function Areas() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
   
-  // ✅ NUEVO: Estado para la paginación del backend
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 3;
@@ -35,7 +34,6 @@ export default function Areas() {
     loadUsers();
   }, []);
 
-  // ✅ NUEVO: Cargar áreas cuando cambia la página o el término de búsqueda
   useEffect(() => {
     loadAreas();
   }, [currentPage, searchTerm]);
@@ -141,6 +139,7 @@ export default function Areas() {
       </div>
     );
   }
+  const role = localStorage.getItem("role") || "USUARIO";
 
   return (
     <div className="areas-container">
@@ -150,8 +149,8 @@ export default function Areas() {
         <div className="areas-header">
           <h1 className="areas-title">Áreas</h1>
           <div className="admin-badge">
-            <div className="admin-avatar"></div>
-            <span className="admin-text">ADMINISTRADOR</span>
+            <div className="admin-avatar">👩‍💻</div>
+            <span className="admin-text">{role.toUpperCase()}</span>
           </div>
         </div>
 
@@ -214,7 +213,7 @@ export default function Areas() {
                 </tr>
               ) : (
                 areas.map((area) => (
-                  <tr key={area.id}>
+                  <tr key={area._id}>
                     <td className="td-nombre">{area.nombre}</td>
                     <td className="td-descripcion">{area.descripcion}</td>
                     <td className="td-email">{area.email}</td>
@@ -231,7 +230,7 @@ export default function Areas() {
                         </button>
                         <button
                           className="btn-delete"
-                          onClick={() => handleDelete(area.id)}
+                          onClick={() => handleDelete(area._id)}
                         >
                           ✕
                         </button>

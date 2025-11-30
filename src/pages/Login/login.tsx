@@ -11,12 +11,14 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const response = await login(email, password);
-      localStorage.setItem("token", response.access_token);
-      window.location.href = "/dashboard";
-    } catch (e) {
-      setError("Credenciales incorrectas");
-    }
+    const response = await login(email, password);
+    localStorage.setItem("token", response.access_token);
+    localStorage.setItem("role", response.user.role); // ✅ guardar rol
+    window.location.href = "/dashboard";
+  } catch (e) {
+    setError("Credenciales incorrectas");
+  }
+
   };
 
   return (

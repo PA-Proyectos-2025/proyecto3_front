@@ -147,6 +147,8 @@ export default function Proyectos() {
 
   const totalPages = Math.ceil(filteredProyectos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
+  const role = localStorage.getItem("role") || "USUARIO";
+
   const paginatedProyectos = filteredProyectos.slice(
     startIndex,
     startIndex + itemsPerPage
@@ -166,13 +168,12 @@ export default function Proyectos() {
   return (
     <div className="proyectos-container">
       <Sidebar />
-
       <div className="proyectos-content">
         <div className="proyectos-header">
           <h1 className="proyectos-title">Proyectos</h1>
-          <div className="admin-badge">
-            <div className="admin-avatar"></div>
-            <span className="admin-text">ADMINISTRADOR</span>
+            <div className="admin-badge">
+            <div className="admin-avatar">👩‍💻</div>
+            <span className="admin-text">{role.toUpperCase()}</span>
           </div>
         </div>
 
