@@ -80,7 +80,7 @@ export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormPr
       console.log('📤 Tipo:', typeof dataToSend.id_responsable_area);
 
       if (area) {
-        await updateArea(area.id, dataToSend);
+        await updateArea(area._id, dataToSend);
       } else {
         await createArea(dataToSend);
       }
