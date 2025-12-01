@@ -1,8 +1,11 @@
 // En 'src/components/HistorialForm/HistorialForm.tsx'
 
 import React, { useState, useEffect } from 'react';
-import type { HistorialReclamo } from '../../api/historialReclamos'; // Ajusta la ruta de importación
-import { createHistorial, updateHistorial } from '../../api/historialReclamos'; // Ajusta la ruta de importación
+import type { HistorialReclamo, HistorialEstadoCreate } from '../../api/historialReclamos';
+import { createHistorial, updateHistorial } from '../../api/historialReclamos';
+import { getReclamos } from '../../api/reclamos';
+import { getEstadosReclamo } from '../../api/estadoReclamo';
+import { getOpiniones } from '../../api/historialReclamos';
 import './historialForm.css';
 
 interface HistorialFormProps {
@@ -11,39 +14,115 @@ interface HistorialFormProps {
   onSuccess: () => void;
 }
 
-// Valores iniciales (strings planos)
+type Reclamo = {
+  _id: string;
+  id?: string;
+  titulo: string;
+};
+
+type EstadoReclamo = {
+  _id: string;
+  id?: string;
+  nombre: string;
+};
+
+type Usuario = {
+  _id: string;
+  id?: string;
+  name: string;
+  email: string;
+};
+
+type Opinion = {
+  _id: string;
+  id?: string;
+  descripcion?: string;
+  comentario?: string;
+};
+
 const initialFormData = {
   reclamoId: '',
   estadoReclamoId: '',
   usuarioResponsableId: '',
   opinionId: '',
-  fechaHoraInicio: new Date().toISOString().substring(0, 16), // YYYY-MM-DDTHH:mm
+  fechaHoraInicio: new Date().toISOString().substring(0, 16),
   fechaHoraFin: '',
 };
 
-type FormState = typeof initialFormData; // Usa el tipo inferido de initialFormData
+type FormState = typeof initialFormData;
 
 export default function HistorialForm({ historial, onClose, onSuccess }: HistorialFormProps) {
   const isEditing = !!historial;
   const [formData, setFormData] = useState<FormState>(initialFormData);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
 
-  // 1. Cargar datos si estamos editando
+  // Estados para los datos de los selectores
+  const [reclamos, setReclamos] = useState<Reclamo[]>([]);
+  const [estados, setEstados] = useState<EstadoReclamo[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [opiniones, setOpiniones] = useState<Opinion[]>([]);
+
+  // Cargar datos de las APIs
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingData(true);
+        
+        // Cargar reclamos
+        const reclamosData = await getReclamos();
+        setReclamos(reclamosData);
+
+        // Cargar estados
+        const estadosData = await getEstadosReclamo();
+        setEstados(estadosData);
+
+        // Cargar usuarios
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:3000/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.ok) {
+          const usuariosData = await response.json();
+          setUsuarios(usuariosData);
+        }
+
+        // Cargar opiniones
+        const opinionesData = await getOpiniones();
+        setOpiniones(opinionesData);
+
+      } catch (err) {
+        console.error('Error cargando datos:', err);
+        setError('Error al cargar los datos del formulario');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Cargar datos si estamos editando
   useEffect(() => {
     if (isEditing && historial) {
       setFormData({
-        // Acceso directo a las propiedades string
         reclamoId: historial.reclamoId,
         estadoReclamoId: historial.estadoReclamoId,
-        usuarioResponsableId: historial.usuarioResponsableId,
-        opinionId: historial.opinionId,
-        // Convertimos la fecha ISO (string) a formato de input datetime-local
-        fechaHoraInicio: historial.fechaHoraInicio ? new Date(historial.fechaHoraInicio).toISOString().substring(0, 16) : initialFormData.fechaHoraInicio,
-        fechaHoraFin: historial.fechaHoraFin ? new Date(historial.fechaHoraFin).toISOString().substring(0, 16) : '',
+        usuarioResponsableId: historial.usuarioResponsableId || '',
+        opinionId: historial.opinionId || '',
+        fechaHoraInicio: historial.fechaHoraInicio 
+          ? new Date(historial.fechaHoraInicio).toISOString().substring(0, 16) 
+          : initialFormData.fechaHoraInicio,
+        fechaHoraFin: historial.fechaHoraFin 
+          ? new Date(historial.fechaHoraFin).toISOString().substring(0, 16) 
+          : '',
       });
     } else {
-        setFormData(initialFormData);
+      setFormData(initialFormData);
     }
   }, [historial, isEditing]);
 
@@ -60,27 +139,49 @@ export default function HistorialForm({ historial, onClose, onSuccess }: Histori
     setLoading(true);
     setError('');
 
-    // Prepara los datos a enviar. Enviamos strings planos, el backend es responsable
-    // de convertirlos a OID/Date si es necesario.
-    const dataToSubmit: Partial<HistorialReclamo> = {
-        // Enviar ID/OID como string
-        reclamoId: formData.reclamoId,
-        estadoReclamoId: formData.estadoReclamoId,
-        usuarioResponsableId: formData.usuarioResponsableId,
-        opinionId: formData.opinionId,
-        // Enviar la fecha como string ISO para que el backend la interprete
-        fechaHoraInicio: new Date(formData.fechaHoraInicio).toISOString(),
-        fechaHoraFin: formData.fechaHoraFin ? new Date(formData.fechaHoraFin).toISOString() : null,
-    };
-    
+    console.log('📝 Form Data antes de enviar:', formData);
+    console.log('🔍 OpinionId seleccionado:', formData.opinionId);
+    console.log('📋 Opiniones disponibles:', opiniones);
+
     try {
       if (isEditing) {
-        // Usamos el ID de string plano para actualizar
-        await updateHistorial(historial!._id, dataToSubmit);
+        // Actualizar historial existente
+        const historialId = historial!.id || historial!._id;
+        if (!historialId) {
+          throw new Error('ID de historial no encontrado');
+        }
+
+        const dataToUpdate: Partial<HistorialEstadoCreate> = {
+          reclamoId: formData.reclamoId,
+          estadoReclamoId: formData.estadoReclamoId,
+          usuarioResponsableId: formData.usuarioResponsableId || undefined,
+          opinionId: formData.opinionId || undefined,
+          fechaHoraInicio: new Date(formData.fechaHoraInicio).toISOString(),
+          fechaHoraFin: formData.fechaHoraFin 
+            ? new Date(formData.fechaHoraFin).toISOString() 
+            : undefined,
+        };
+
+        await updateHistorial(historialId, dataToUpdate);
       } else {
-        // Para crear, solo enviamos las propiedades sin _id
-        await createHistorial(dataToSubmit as Omit<HistorialReclamo, '_id' | 'deleted' | 'deletedAt'>);
+        // Crear nuevo historial
+        const dataToCreate: HistorialEstadoCreate = {
+          reclamoId: formData.reclamoId,
+          estadoReclamoId: formData.estadoReclamoId,
+          usuarioResponsableId: formData.usuarioResponsableId || undefined,
+          // Solo enviar opinionId si es un ObjectId válido (24 caracteres hexadecimales)
+          opinionId: (formData.opinionId && /^[0-9a-fA-F]{24}$/.test(formData.opinionId)) 
+            ? formData.opinionId 
+            : undefined,
+          fechaHoraInicio: new Date(formData.fechaHoraInicio).toISOString(),
+          fechaHoraFin: formData.fechaHoraFin 
+            ? new Date(formData.fechaHoraFin).toISOString() 
+            : undefined,
+        };
+
+        await createHistorial(dataToCreate);
       }
+      
       onSuccess();
     } catch (err: any) {
       console.error("💥 Error al guardar:", err);
@@ -90,7 +191,18 @@ export default function HistorialForm({ historial, onClose, onSuccess }: Histori
     }
   };
 
-  // ... (El resto del JSX del formulario es el mismo)
+  if (loadingData) {
+    return (
+      <div className="modal-backdrop">
+        <div className="modal-content">
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            Cargando datos del formulario...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="modal-backdrop">
       <div className="modal-content">
@@ -99,45 +211,60 @@ export default function HistorialForm({ historial, onClose, onSuccess }: Histori
         
         <form onSubmit={handleSubmit} className="historial-form">
             
-          {/* Campo ID Reclamo */}
+          {/* Selector de Reclamo */}
           <div className="form-group">
-            <label htmlFor="reclamoId">ID Reclamo:</label>
-            <input
-              type="text"
+            <label htmlFor="reclamoId">Reclamo:</label>
+            <select
               id="reclamoId"
               name="reclamoId"
               value={formData.reclamoId}
               onChange={handleChange}
-              placeholder="69285246f4aeffeff2e6f4ec"
               required
-            />
+            >
+              <option value="">Seleccione un reclamo</option>
+              {reclamos.map((reclamo) => (
+                <option key={reclamo._id} value={reclamo._id}>
+                  {reclamo.titulo}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Campo ID Estado Reclamo */}
+          {/* Selector de Estado */}
           <div className="form-group">
-            <label htmlFor="estadoReclamoId">ID Estado:</label>
-            <input
-              type="text"
+            <label htmlFor="estadoReclamoId">Estado:</label>
+            <select
               id="estadoReclamoId"
               name="estadoReclamoId"
               value={formData.estadoReclamoId}
               onChange={handleChange}
-              placeholder="69278fd471de6f39337f71aa"
               required
-            />
+            >
+              <option value="">Seleccione un estado</option>
+              {estados.map((estado) => (
+                <option key={estado._id} value={estado._id}>
+                  {estado.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Campo ID Usuario Responsable */}
+          {/* Selector de Usuario Responsable */}
           <div className="form-group">
-            <label htmlFor="usuarioResponsableId">ID Usuario Resp.:</label>
-            <input
-              type="text"
+            <label htmlFor="usuarioResponsableId">Usuario Responsable:</label>
+            <select
               id="usuarioResponsableId"
               name="usuarioResponsableId"
               value={formData.usuarioResponsableId}
               onChange={handleChange}
-              required
-            />
+            >
+              <option value="">Seleccione un usuario (opcional)</option>
+              {usuarios.map((usuario) => (
+                <option key={usuario._id} value={usuario._id}>
+                  {usuario.name} ({usuario.email})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Campo Fecha/Hora Inicio */}
@@ -165,17 +292,22 @@ export default function HistorialForm({ historial, onClose, onSuccess }: Histori
             />
           </div>
 
-          {/* Campo ID Opinión */}
+          {/* Selector de Opinión */}
           <div className="form-group">
-            <label htmlFor="opinionId">ID Opinión:</label>
-            <input
-              type="text"
+            <label htmlFor="opinionId">Opinión (Opcional):</label>
+            <select
               id="opinionId"
               name="opinionId"
               value={formData.opinionId}
               onChange={handleChange}
-              required
-            />
+            >
+              <option value="">Sin opinión</option>
+              {opiniones.map((opinion) => (
+                <option key={opinion._id} value={opinion._id}>
+                  {opinion.descripcion || opinion.comentario || opinion._id}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-actions">
