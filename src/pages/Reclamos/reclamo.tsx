@@ -10,6 +10,14 @@ import { getTipoReclamoById } from "../../api/tiposReclamos";
 
 import "./reclamo.css";
 
+type ArchivoDto = {
+  id: string;
+  nombre: string;
+  size?: number;
+  mimeType?: string;
+};
+
+
 type Reclamo = {
   _id: string;
   id?: string;
@@ -17,7 +25,7 @@ type Reclamo = {
   descripcion?: string;
   fechaCreacion: string;
   fechaCierre?: string | null;
-  archivos: string[];
+  archivos: ArchivoDto[];   // 👈 antes string[], ahora objetos
   clienteId: string;
   proyectoId: string;
   prioridadId: string;
@@ -31,13 +39,14 @@ type ReclamoDetail = {
   id: string;
   titulo?: string;
   descripcion?: string;
-  archivos?: string[];
+  archivos?: ArchivoDto[];  // 👈 igual que en Reclamo
   tipoReclamoId?: string;
   prioridadId?: string;
   nivelCriticidadId?: string;
   proyectoId?: string;
   clienteId?: string;
 };
+
 
 export default function Reclamos() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -491,7 +500,8 @@ export default function Reclamos() {
                   <div className="archivos-list">
                     {selectedReclamo.archivos.map((archivo, idx) => (
                       <div key={idx} className="archivo-item">
-                        📎 {archivo}
+                        📎 {archivo.nombre}
+                        {archivo.size && ` (${(archivo.size / 1024).toFixed(2)} KB)`}
                       </div>
                     ))}
                   </div>

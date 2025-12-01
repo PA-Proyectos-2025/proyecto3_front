@@ -142,7 +142,9 @@ export default function Proyectos() {
   };
 
   const filteredProyectos = proyectos.filter((p) =>
-    p.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    p.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
+    
+  
   );
 
   const totalPages = Math.ceil(filteredProyectos.length / itemsPerPage);

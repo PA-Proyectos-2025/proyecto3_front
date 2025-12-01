@@ -60,11 +60,12 @@ export default function Areas() {
 
       // Agregar filtro de búsqueda si existe
       if (searchTerm.trim()) {
-        filters.nombre = searchTerm;
-        // También puedes buscar por email:
-        // filters.email = searchTerm;
+        if (searchTerm.includes('@')) {
+          filters.email = searchTerm;
+        } else {
+          filters.nombre = searchTerm;
+        }
       }
-
       console.log('🔍 Cargando áreas con filtros:', filters);
 
       // ✅ NUEVO: Llamar al endpoint con paginación

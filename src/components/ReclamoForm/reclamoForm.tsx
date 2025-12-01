@@ -15,11 +15,18 @@ type Props = {
   onSuccess: () => void;
 };
 
-type ReclamoResp = {
+export type ArchivoDto = {
+  id: string;
+  nombre: string;
+  size?: number;
+  mimeType?: string;
+};
+
+export type ReclamoResp = {
   id: string;
   titulo?: string;
   descripcion?: string;
-  archivos?: string[];
+  archivos?: ArchivoDto[];   // 👈 antes string[], ahora objetos
   tipoReclamoId?: string;
   prioridadId?: string;
   nivelCriticidadId?: string;
@@ -30,7 +37,8 @@ type ReclamoResp = {
 type PropsEx = Props & { reclamo?: ReclamoResp | null };
 
 export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
-  const [formData, setFormData] = useState<Partial<CreateReclamoDto>>({
+  // CAMBIADO: Renombré 'formData' a 'formState' para evitar conflictos de nombres
+  const [formState, setFormState] = useState<Partial<CreateReclamoDto>>({
     titulo: "",
     descripcion: "",
     archivos: [],
@@ -40,6 +48,8 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
     proyectoId: "",
     clienteId: "",
   });
+  
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
   const [tipoReclamos, setTipoReclamos] = useState<Item[]>([]);
   const [prioridades, setPrioridades] = useState<Item[]>([]);
@@ -93,10 +103,9 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
     load();
   }, []);
 
-  // Prefill cuando recibimos un reclamo para editar
   useEffect(() => {
     if (!reclamo) return;
-    setFormData({
+    setFormState({
       titulo: reclamo.titulo ?? "",
       descripcion: reclamo.descripcion ?? "",
       archivos: reclamo.archivos ?? [],
@@ -110,7 +119,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,19 +128,22 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
     setLoading(true);
     
     try {
-      const payload: CreateReclamoDto = {
-        titulo: formData.titulo || "",
-        descripcion: formData.descripcion || "",
-        archivos: formData.archivos || [],
-        tipoReclamoId: formData.tipoReclamoId || "",
-        prioridadId: formData.prioridadId || "",
-        nivelCriticidadId: formData.nivelCriticidadId || "",
-        proyectoId: formData.proyectoId || "",
-        clienteId: formData.clienteId || "",
-      };
-
-      console.log('📤 Enviando reclamo:', payload);
-
+      // CAMBIADO: Declaro 'payload' sin tipo explícito para que TypeScript lo infiera como FormData
+      const payload = new FormData();
+      payload.append('titulo', formState.titulo || "");
+      payload.append('descripcion', formState.descripcion || "");
+      payload.append('tipoReclamoId', formState.tipoReclamoId || "");
+      payload.append('prioridadId', formState.prioridadId || "");
+      payload.append('nivelCriticidadId', formState.nivelCriticidadId || "");
+      payload.append('proyectoId', formState.proyectoId || "");
+      payload.append('clienteId', formState.clienteId || "");
+      
+      selectedFiles.forEach((file) => {
+        payload.append('archivos', file);
+      });
+      
+      console.log('📤 Enviando reclamo con archivos:', payload);
+      
       if (reclamo) {
         await updateReclamo(reclamo.id, payload);
       } else {
@@ -173,7 +185,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
             <label>Título *</label>
             <input 
               name="titulo" 
-              value={formData.titulo || ""} 
+              value={formState.titulo || ""} 
               onChange={handleChange} 
               required 
               placeholder="Ej: Problema de acceso"
@@ -184,7 +196,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
             <label>Descripción *</label>
             <textarea 
               name="descripcion" 
-              value={formData.descripcion || ""} 
+              value={formState.descripcion || ""} 
               onChange={handleChange} 
               rows={3}
               required
@@ -192,12 +204,41 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
             />
           </div>
 
+          <div className="form-group">
+            <label>Archivos Adjuntos</label>
+            <input 
+              type="file" 
+              multiple 
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                setSelectedFiles(files);
+              }} 
+              accept=".pdf,.doc,.docx,.jpg,.png,.txt"
+            />
+            {selectedFiles.length > 0 && (
+              <ul className="file-list">
+                {selectedFiles.map((file, idx) => (
+                    <li key={idx} className="file-item">
+                    <span>📎 {file.name} ({(file.size / 1024).toFixed(2)} KB)</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))}
+                      className="remove-file"
+                    >
+                      ✕
+                    </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          </div>
+
           <div className="form-row">
             <div className="form-group">
               <label>Tipo de Reclamo *</label>
               <select 
                 name="tipoReclamoId" 
-                value={formData.tipoReclamoId || ""} 
+                value={formState.tipoReclamoId || ""} 
                 onChange={handleChange}
                 required
               >
@@ -214,7 +255,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
               <label>Prioridad *</label>
               <select 
                 name="prioridadId" 
-                value={formData.prioridadId || ""} 
+                value={formState.prioridadId || ""} 
                 onChange={handleChange}
                 required
               >
@@ -233,7 +274,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
               <label>Nivel de Criticidad *</label>
               <select 
                 name="nivelCriticidadId" 
-                value={formData.nivelCriticidadId || ""} 
+                value={formState.nivelCriticidadId || ""} 
                 onChange={handleChange}
                 required
               >
@@ -250,7 +291,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
               <label>Cliente *</label>
               <select 
                 name="clienteId" 
-                value={formData.clienteId || ""} 
+                value={formState.clienteId || ""} 
                 onChange={handleChange}
                 required
               >
@@ -268,7 +309,7 @@ export default function ReclamoForm({ onClose, onSuccess, reclamo }: PropsEx) {
             <label>Proyecto *</label>
             <select 
               name="proyectoId" 
-              value={formData.proyectoId || ""} 
+              value={formState.proyectoId || ""} 
               onChange={handleChange}
               required
             >

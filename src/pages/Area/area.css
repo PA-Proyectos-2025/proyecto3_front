@@ -9,6 +9,9 @@
   flex: 1;
   background-color: #F5F5F5;
   padding: 30px 50px;
+  /* Forzar color de texto oscuro dentro del área para evitar herencia
+     de variables globales que puedan dejar el texto en blanco */
+  color: #213547;
 }
 
 .areas-header {
@@ -177,11 +180,6 @@
   min-width: 150px;
 }
 
-.td-descripcion {
-  max-width: 350px;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
 
 .checkbox-activo {
   width: 20px;

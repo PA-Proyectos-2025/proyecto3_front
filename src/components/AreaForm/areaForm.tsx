@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createArea, updateArea, type Area, type CreateAreaDto, type UpdateAreaDto } from "../../api/areas";
-import "./AreaForm.css";
+import "./areaForm.css";
 
 type User = {
   id: string;

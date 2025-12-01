@@ -27,6 +27,8 @@ export type ClienteFilters = {
   page?: number;
   limit?: number;
   nombre?: string;
+  cuit?:string;
+  razonSocial?: string;
   email?: string;
   deleted?: boolean;
 };

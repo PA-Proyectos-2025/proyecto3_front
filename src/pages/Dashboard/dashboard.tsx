@@ -61,17 +61,7 @@ export default function Dashboard() {
   const [tiposReclamos, setTiposReclamos] = useState<any[]>([]);
 
   // ============= Estados ADMIN =============
-  const [feedback, setFeedback] = useState<any[]>([]);
-  const [filtrosFeedback, setFiltrosFeedback] = useState({
-    reclamoId: "",
-    estadoReclamoId: "",
-    usuarioResponsableId: "",
-    fechaHoraInicio: "",
-    fechaHoraFin: "",
-    opinionId: "",
-    deleted: false,
-  });
-  
+
   const [topProyectos, setTopProyectos] = useState<TopProyectoItem[]>([]);
   const [filtrosTopProyectos, setFiltrosTopProyectos] = useState({
     estadoReclamoId: "",
@@ -96,7 +86,7 @@ export default function Dashboard() {
   // ============= Estados RESPONSABLE_AREA =============
   const [distribucionPorEstado, setDistribucionPorEstado] = useState<any[]>([]);
   const [filtrosDistribucion, setFiltrosDistribucion] = useState({
-    estadoReclamoId: "",
+    reclamoId: "",
     usuarioResponsableId: "",
     opinionId: "",
     fechaHoraInicio: "",
@@ -185,14 +175,6 @@ export default function Dashboard() {
   };
 
   // ============= Fetchs ADMIN =============
-  const fetchFeedback = () => {
-    const url = `${API_URL}/estadisticas/feedback?${buildQuery(filtrosFeedback)}`;
-    console.log("📊 Fetch Feedback");
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => res.json())
-      .then(setFeedback)
-      .catch((err) => console.error("❌ Error feedback:", err));
-  };
 
   const fetchTopProyectos = () => {
     console.log("📥 Filtros Top Proyectos:", filtrosTopProyectos);
@@ -257,7 +239,6 @@ export default function Dashboard() {
     }
     // Agregar fetchTopProyectos y fetchBalanceCarga al useEffect inicial de ADMIN
     if (role === "ADMIN") {
-      fetchFeedback();
       fetchTopProyectos(); 
       fetchBalanceCarga(); // <-- NUEVO FETCH INICIAL
     }
@@ -286,10 +267,6 @@ export default function Dashboard() {
   }, [filtrosReclamosResponsables]);
 
   // ============= useEffects para filtros ADMIN =============
-  useEffect(() => {
-    if (role === "ADMIN") fetchFeedback();
-  }, [filtrosFeedback]);
-
   useEffect(() => {
     if (role === "ADMIN") fetchTopProyectos();
   }, [filtrosTopProyectos]);
@@ -474,40 +451,6 @@ export default function Dashboard() {
           <>
             {/* Balance de Carga por Área/Responsable */}
             
-            
-            {/* Feedback */}
-            <div className="filtros-container">
-              <h3>Filtros: Feedback</h3>
-              <div className="filtros-grid">
-                <label>
-                  Reclamo ID:
-                  <input type="text" value={filtrosFeedback.reclamoId} onChange={(e) => setFiltrosFeedback({ ...filtrosFeedback, reclamoId: e.target.value })} />
-                </label>
-                <label>
-                  Estado Reclamo ID:
-                  <input type="text" value={filtrosFeedback.estadoReclamoId} onChange={(e) => setFiltrosFeedback({ ...filtrosFeedback, estadoReclamoId: e.target.value })} />
-                </label>
-                <label>
-                  Usuario Responsable ID:
-                  <input type="text" value={filtrosFeedback.usuarioResponsableId} onChange={(e) => setFiltrosFeedback({ ...filtrosFeedback, usuarioResponsableId: e.target.value })} />
-                </label>
-                <label>
-                  Opinión ID:
-                  <input type="text" value={filtrosFeedback.opinionId} onChange={(e) => setFiltrosFeedback({ ...filtrosFeedback, opinionId: e.target.value })} />
-                </label>
-                <label>
-                  Incluir eliminados:
-                  <input type="checkbox" checked={filtrosFeedback.deleted} onChange={(e) => setFiltrosFeedback({ ...filtrosFeedback, deleted: e.target.checked })} />
-                </label>
-              </div>
-            </div>
-            <div className="charts-container">
-              <div className="chart-box">
-                <FeedbackPorCalificacionChart data={feedback} />
-              </div>
-            </div>
-
-
             {/* Top Proyectos */}
             <div className="filtros-container">
               <h3>Filtros: Top Proyectos</h3>
@@ -591,8 +534,8 @@ export default function Dashboard() {
               <h3>Filtros: Distribución por Estado</h3>
               <div className="filtros-grid">
                 <label>
-                  Estado Reclamo ID:
-                  <input type="text" value={filtrosDistribucion.estadoReclamoId} onChange={(e) => setFiltrosDistribucion({ ...filtrosDistribucion, estadoReclamoId: e.target.value })} />
+                  Reclamo ID:
+                  <input type="text" value={filtrosDistribucion.reclamoId} onChange={(e) => setFiltrosDistribucion({ ...filtrosDistribucion, reclamoId: e.target.value })} />
                 </label>
                 <label>
                   Usuario Responsable ID:

@@ -1,4 +1,4 @@
-// src/charts/FeedbackPorCalificacionChart.tsx
+// src/charts/TopProyectosChart.tsx
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,32 +12,29 @@ import { Bar } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-type Item = { promedio: number; cantidad: number };
+type Item = { proyectoId: string; nombre: string; cantidad: number };
 type Props = { data: Item[] };
 
-export default function FeedbackPorPromedioChart({ data }: Props) {
-  const labels = data.map(d =>
-    typeof d.promedio === "number" ? `⭐ ${d.promedio}` : "⭐ Sin promedio"
-  );
+export default function TopProyectosChart({ data }: Props) {
+  const labels = data.map(d => d.nombre || "Sin nombre");
   const values = data.map(d => d.cantidad);
 
   const chartData = {
     labels,
     datasets: [
       {
-        label: "Cantidad de responsables",
+        label: "Reclamos por proyecto",
         data: values,
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        backgroundColor: "rgba(54, 162, 235, 0.6)",
       },
     ],
   };
 
   const options = {
-    indexAxis: "y" as const,
     responsive: true,
     plugins: {
       legend: { position: "top" as const },
-      title: { display: true, text: "Feedback por promedio" },
+      title: { display: true, text: "Top proyectos por reclamos" },
     },
   };
 

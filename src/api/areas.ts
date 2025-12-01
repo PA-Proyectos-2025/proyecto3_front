@@ -28,6 +28,7 @@ export type AreaFilters = {
   nombre?: string;
   email?: string;
   deleted?: boolean;
+  
 };
 
 export type PaginatedAreasResponse = {
@@ -208,10 +209,17 @@ export const deleteArea = async (id: string): Promise<void> => {
   });
 
   if (!response.ok) {
-    throw new Error("Error al eliminar el área");
+    if (response.status === 404) {
+      // Ya estaba eliminado o no existe
+      console.warn(`Área con ID ${id} no encontrada (ya eliminada).`);
+      return;
+    }
+    const errorText = await response.text();
+    throw new Error(
+      `Error al eliminar el área: ${response.status} ${response.statusText} - ${errorText}`
+    );
   }
 };
-
 export const getUsers = async () => {
   const token = localStorage.getItem("token");
   
