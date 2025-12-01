@@ -22,7 +22,6 @@ export type UpdateAreaDto = {
   id_responsable_area?: string;
 };
 
-// ✅ NUEVO: Tipos para la paginación
 export type AreaFilters = {
   page?: number;
   limit?: number;
@@ -41,11 +40,20 @@ export type PaginatedAreasResponse = {
   };
 };
 
-// ✅ NUEVO: Obtener áreas con paginación del backend
+// 🔧 HELPER: Normalizar área (convertir 'id' a '_id')
+const normalizeArea = (area: any): Area => {
+  return {
+    _id: area._id || area.id,
+    nombre: area.nombre,
+    descripcion: area.descripcion,
+    email: area.email,
+    id_responsable_area: area.id_responsable_area,
+  };
+};
+
 export const getAreasWithFilters = async (filters: AreaFilters = {}): Promise<PaginatedAreasResponse> => {
   const token = localStorage.getItem("token");
   
-  // Construir query params
   const params = new URLSearchParams();
   if (filters.page) params.append('page', filters.page.toString());
   if (filters.limit) params.append('limit', filters.limit.toString());
@@ -70,12 +78,19 @@ export const getAreasWithFilters = async (filters: AreaFilters = {}): Promise<Pa
   }
 
   const data = await response.json();
-  console.log('✅ Áreas paginadas recibidas:', data);
+  console.log('✅ Áreas paginadas recibidas (antes de normalizar):', data);
   
-  return data;
+  // 🔧 NORMALIZAR: Convertir 'id' a '_id' en todas las áreas
+  const normalizedData = {
+    ...data,
+    data: data.data.map(normalizeArea)
+  };
+  
+  console.log('✅ Áreas normalizadas (con _id):', normalizedData);
+  
+  return normalizedData;
 };
 
-// Mantener el método original para compatibilidad
 export const getAreas = async (): Promise<Area[]> => {
   const token = localStorage.getItem("token");
   
@@ -92,7 +107,10 @@ export const getAreas = async (): Promise<Area[]> => {
     throw new Error(`Error al obtener las áreas: ${response.status}`);
   }
 
-  return response.json();
+  const areas = await response.json();
+  
+  // 🔧 NORMALIZAR: Convertir 'id' a '_id'
+  return areas.map(normalizeArea);
 };
 
 export const getAreaById = async (id: string): Promise<Area> => {
@@ -108,7 +126,10 @@ export const getAreaById = async (id: string): Promise<Area> => {
     throw new Error("Error al obtener el área");
   }
 
-  return response.json();
+  const area = await response.json();
+  
+  // 🔧 NORMALIZAR: Convertir 'id' a '_id'
+  return normalizeArea(area);
 };
 
 export const createArea = async (areaData: CreateAreaDto): Promise<Area> => {
@@ -135,7 +156,10 @@ export const createArea = async (areaData: CreateAreaDto): Promise<Area> => {
     }
   }
 
-  return response.json();
+  const area = await response.json();
+  
+  // 🔧 NORMALIZAR: Convertir 'id' a '_id'
+  return normalizeArea(area);
 };
 
 export const updateArea = async (
@@ -167,7 +191,10 @@ export const updateArea = async (
     throw new Error("Error al actualizar el área");
   }
 
-  return response.json();
+  const area = await response.json();
+  
+  // 🔧 NORMALIZAR: Convertir 'id' a '_id'
+  return normalizeArea(area);
 };
 
 export const deleteArea = async (id: string): Promise<void> => {

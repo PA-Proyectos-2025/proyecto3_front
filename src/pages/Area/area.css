@@ -298,3 +298,8 @@
   color: #666;
   font-size: 1.1rem;
 }
+
+/* Solo la primera fila de la tabla (el encabezado) con letra blanca */
+.areas-table thead tr:first-child th {
+  color: white;
+}

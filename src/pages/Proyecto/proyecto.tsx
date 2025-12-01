@@ -181,7 +181,7 @@ export default function Proyectos() {
 
         <div className="proyectos-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input
               type="text"
               placeholder="Buscar proyecto"

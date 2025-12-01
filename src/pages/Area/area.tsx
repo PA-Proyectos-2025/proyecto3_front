@@ -98,6 +98,8 @@ export default function Areas() {
   };
 
   const handleEdit = (area: Area) => {
+    console.log('🖊️ handleEdit - área seleccionada:', area);
+    console.log('🖊️ handleEdit - area._id:', area._id);
     setSelectedArea(area);
     setIsFormOpen(true);
   };
@@ -158,7 +160,7 @@ export default function Areas() {
 
         <div className="areas-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input
               type="text"
               placeholder="Buscar área por nombre"

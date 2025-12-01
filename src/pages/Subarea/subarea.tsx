@@ -162,7 +162,7 @@ export default function Subareas() {
 
         <div className="subareas-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input
               type="text"
               placeholder="Buscar subárea por nombre"

@@ -277,7 +277,7 @@ export default function Reclamos() {
 
         <div className="reclamos-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input
               type="text"
               placeholder="Buscar reclamo"

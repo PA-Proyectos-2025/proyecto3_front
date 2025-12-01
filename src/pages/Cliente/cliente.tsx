@@ -119,7 +119,7 @@ export default function Clientes() {
 
         <div className="clientes-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input
               type="text"
               placeholder="Buscar cliente por nombre o email"
