@@ -6,6 +6,7 @@ import Subarea from "../pages/Subarea/subarea";
 import Cliente from "../pages/Cliente/cliente";
 import Proyecto from "../pages/Proyecto/proyecto";
 import Reclamo from "../pages/Reclamos/reclamo";
+import Historial from "../pages/Historial/historial";
 
 export default function AppRouter() {
   return (
@@ -16,9 +17,10 @@ export default function AppRouter() {
         <Route path="/areas" element={<Area />} />
         <Route path="/subareas" element={<Subarea />} />
         <Route path="/clientes" element={<Cliente />} />
+        <Route path="/cliente" element={<Cliente />} />
         <Route path="/proyectos" element={<Proyecto />} />
         <Route path="/reclamos" element={<Reclamo />} />
-        
+        <Route path="/historial" element={<Historial />} />
       </Routes>
     </BrowserRouter>
   );

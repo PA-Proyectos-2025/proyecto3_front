@@ -57,3 +57,133 @@
   max-width: 1000px;
   margin: 0 auto;
 }
+
+/* Contenedor general del dashboard */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f6fa; /* gris claro de fondo */
+}
+
+/* Contenido principal */
+.dashboard-content {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.dashboard-title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-badge {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 25px;
+  padding: 8px 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.admin-avatar {
+  font-size: 1.5rem;
+  margin-right: 8px;
+}
+
+.admin-text {
+  font-weight: 500;
+  color: #555;
+}
+
+/* Filtros */
+.filtros-container {
+  background: #fff;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.filtros-container h3 {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.filtros-container label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.filtros-container input[type="text"],
+.filtros-container input[type="date"] {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+.filtros-container input[type="checkbox"] {
+  margin-top: 6px;
+}
+
+.filtros-container button {
+  background: #0078d4;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  transition: background 0.2s ease;
+}
+
+.filtros-container button:hover {
+  background: #005fa3;
+}
+
+.filtros-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+
+/* Gráficos */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* más compacto */
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.chart-box {
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  min-height: 220px;
+  max-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+
+
+

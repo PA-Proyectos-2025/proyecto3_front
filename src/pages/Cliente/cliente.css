@@ -52,3 +52,21 @@
   font-weight: 600;
   color: #0A3A96;
 }
+
+.clientes-table thead {
+  background-color: #0A3A96;
+}
+
+.clientes-table thead th {
+  color: #fff; /* encabezados en blanco */
+}
+
+.clientes-table tbody td {
+  color: #000; /* contenido en negro */
+}
+
+.td-nombre {
+  font-weight: 600;
+  color: #000; /* también negro en la columna nombre */
+}
+

@@ -1,16 +1,8 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/sidebar";
-import { getClientes, deleteCliente } from "../../api/clientes";
+import { getClientes, deleteCliente, type Cliente } from "../../api/clientes"; // ← Importa el tipo Cliente
+import ClienteForm from "../../components/ClienteForm/clienteForm";
 import "./cliente.css";
-
-type Cliente = {
-  _id: string;
-  nombre: string;
-  email: string;
-  cuit: string;
-  direccion: string;
-  razonSocial: string;
-};
 
 export default function Clientes() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,7 +10,12 @@ export default function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const itemsPerPage = 10;
+  
+  // Estados para el formulario
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  
+  const itemsPerPage = 3;
 
   useEffect(() => {
     loadClientes();
@@ -27,12 +24,17 @@ export default function Clientes() {
   const loadClientes = async () => {
     try {
       setLoading(true);
+      console.log('🚀 Cargando clientes...');
+      
       const data = await getClientes();
+      
+      console.log('📦 Clientes cargados:', data);
+      
       setClientes(data);
       setError("");
     } catch (err) {
       setError("Error al cargar los clientes");
-      console.error(err);
+      console.error('💥 Error:', err);
     } finally {
       setLoading(false);
     }
@@ -41,17 +43,44 @@ export default function Clientes() {
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este cliente?")) {
       try {
+        console.log("🗑️ Eliminando cliente con ID:", id);
         await deleteCliente(id);
+        console.log("✅ Cliente eliminado exitosamente");
         await loadClientes();
-      } catch (err) {
-        setError("Error al eliminar el cliente");
-        console.error(err);
+        alert("Cliente eliminado correctamente");
+      } catch (err: any) {
+        console.error("💥 Error al eliminar:", err);
+        setError(err.message || "Error al eliminar el cliente");
+        alert("Error al eliminar el cliente");
       }
     }
   };
 
+  const handleEdit = (cliente: Cliente) => {
+    console.log("✏️ Editando cliente:", cliente);
+    setSelectedCliente(cliente);
+    setIsFormOpen(true);
+  };
+
+  const handleAdd = () => {
+    setSelectedCliente(null);
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setSelectedCliente(null);
+  };
+
+  const handleFormSuccess = async () => {
+    console.log("✅ Operación exitosa, recargando datos...");
+    await loadClientes();
+    handleFormClose();
+  };
+
   const filteredClientes = clientes.filter((cliente) =>
-    cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    (cliente.nombre?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+    (cliente.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredClientes.length / itemsPerPage);
@@ -71,6 +100,7 @@ export default function Clientes() {
       </div>
     );
   }
+  const role = localStorage.getItem("role") || "USUARIO";
 
   return (
     <div className="clientes-container">
@@ -80,8 +110,8 @@ export default function Clientes() {
         <div className="clientes-header">
           <h1 className="clientes-title">Clientes</h1>
           <div className="admin-badge">
-            <div className="admin-avatar"></div>
-            <span className="admin-text">ADMINISTRADOR</span>
+            <div className="admin-avatar">👩‍💻</div>
+            <span className="admin-text">{role.toUpperCase()}</span>
           </div>
         </div>
 
@@ -89,10 +119,10 @@ export default function Clientes() {
 
         <div className="clientes-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input
               type="text"
-              placeholder="Buscar cliente"
+              placeholder="Buscar cliente por nombre o email"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -106,7 +136,7 @@ export default function Clientes() {
             )}
           </div>
 
-          <button className="btn-add">
+          <button className="btn-add" onClick={handleAdd}>
             Agregar <span className="plus-icon">+</span>
           </button>
         </div>
@@ -140,10 +170,17 @@ export default function Clientes() {
                     <td>{cliente.razonSocial}</td>
                     <td>
                       <div className="action-buttons">
-                        <button className="btn-edit">✏️</button>
+                        <button 
+                          className="btn-edit"
+                          onClick={() => handleEdit(cliente)}
+                          title="Editar"
+                        >
+                          ✏️
+                        </button>
                         <button
                           className="btn-delete"
                           onClick={() => handleDelete(cliente._id)}
+                          title="Eliminar"
                         >
                           ✕
                         </button>
@@ -156,7 +193,7 @@ export default function Clientes() {
           </table>
         </div>
 
-        {totalPages > 0 && (
+        {totalPages > 1 && (
           <div className="pagination">
             <button
               className="pagination-btn"
@@ -180,6 +217,14 @@ export default function Clientes() {
           </div>
         )}
       </div>
+
+      {isFormOpen && (
+        <ClienteForm
+          cliente={selectedCliente}
+          onClose={handleFormClose}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 }

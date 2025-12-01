@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { createArea, updateArea, type Area, type CreateAreaDto } from "../../api/areas";
-import "./AreaForm.css";
+import { createArea, updateArea, type Area, type CreateAreaDto, type UpdateAreaDto } from "../../api/areas";
+import "./areaForm.css";
 
 type User = {
   id: string;
@@ -16,6 +16,14 @@ type AreaFormProps = {
 };
 
 export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormProps) {
+  // 🔍 DEBUG: Ver qué recibe el componente
+  console.log('🎯 AreaForm recibió area:', area);
+  console.log('🎯 area._id:', area?._id);
+  console.log('🎯 Tipo de area:', typeof area);
+  if (area) {
+    console.log('🎯 Keys de area:', Object.keys(area));
+  }
+
   const [formData, setFormData] = useState({
     nombre: "",
     descripcion: "",
@@ -27,6 +35,9 @@ export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormPr
 
   useEffect(() => {
     if (area) {
+      console.log('🔄 useEffect - Cargando datos del área:', area);
+      console.log('🔄 useEffect - area._id:', area._id);
+      
       setFormData({
         nombre: area.nombre,
         descripcion: area.descripcion,
@@ -49,23 +60,58 @@ export default function AreaForm({ area, users, onClose, onSuccess }: AreaFormPr
     setLoading(true);
 
     try {
-      const dataToSend: CreateAreaDto = {
-        nombre: formData.nombre,
-        descripcion: formData.descripcion,
-        email: formData.email,
-        id_responsable_area: formData.id_responsable_area || undefined,
-      };
-
       if (area) {
-        await updateArea(area.id, dataToSend);
+        // 🔍 DEBUG: Verificar qué contiene el objeto area
+        console.log('🔍 Objeto area completo:', area);
+        console.log('🔍 area._id:', area._id);
+        console.log('🔍 Tipo de area:', typeof area);
+        console.log('🔍 Keys de area:', Object.keys(area));
+
+        // ✅ Validar que el área tenga un ID válido
+        if (!area._id) {
+          throw new Error('El área no tiene un ID válido. No se puede actualizar.');
+        }
+
+        // ✅ Para actualizar: usar UpdateAreaDto
+        const updateData: UpdateAreaDto = {
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          email: formData.email,
+        };
+
+        // Solo incluir id_responsable_area si tiene valor o si se quiere limpiar
+        if (formData.id_responsable_area.trim() !== '') {
+          updateData.id_responsable_area = formData.id_responsable_area;
+        } else {
+          // Si está vacío, enviar null para limpiar la asignación
+          updateData.id_responsable_area = undefined;
+        }
+
+        console.log('📤 Actualizando área:', area._id);
+        console.log('📤 Datos:', updateData);
+
+        await updateArea(area._id, updateData);
       } else {
-        await createArea(dataToSend);
+        // ✅ Para crear: usar CreateAreaDto
+        const createData: CreateAreaDto = {
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          email: formData.email,
+        };
+
+        if (formData.id_responsable_area && formData.id_responsable_area.trim() !== '') {
+          createData.id_responsable_area = formData.id_responsable_area;
+        }
+
+        console.log('📤 Creando área con datos:', createData);
+
+        await createArea(createData);
       }
 
       onSuccess();
     } catch (err) {
+      console.error('💥 Error:', err);
       setError(area ? "Error al actualizar el área" : "Error al crear el área");
-      console.error(err);
     } finally {
       setLoading(false);
     }

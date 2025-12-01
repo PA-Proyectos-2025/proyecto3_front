@@ -2,12 +2,12 @@
   display: flex;
   min-height: 100vh;
   width: 100%;
-  background-color: #F5F5F5;
+  background-color: #000000;
 }
 
 .proyectos-content {
   flex: 1;
-  background-color: #F5F5F5;
+  background-color: #ffffff;
   padding: 30px 50px;
 }
 
@@ -154,4 +154,20 @@
 .pagination-info {
   font-weight: bold;
   color: #0A3A96;
+}
+
+.proyectos-table td {
+  padding: 20px 15px;
+  text-align: left;
+  color: #333333; /* ← Color oscuro para el texto */
+}
+
+.td-nombre {
+  font-weight: 600;
+  color: #0A3A96;
+}
+
+/* Asegurar que todas las celdas tengan color visible */
+.proyectos-table tbody td {
+  color: #333333;
 }

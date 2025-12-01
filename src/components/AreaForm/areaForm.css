@@ -146,3 +146,8 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Solo la primera fila de la tabla (el encabezado) con letra blanca */
+.areas-table thead tr:first-child th {
+  color: white;
+}
