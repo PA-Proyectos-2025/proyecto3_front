@@ -347,6 +347,7 @@ export default function Reclamos() {
                           ? new Date(r.fechaCierre).toLocaleDateString() 
                           : '-'}
                       </td>
+                      
                       <td>
                         <button 
                           className="btn-details"
